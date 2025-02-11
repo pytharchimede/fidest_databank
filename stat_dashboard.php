@@ -86,6 +86,8 @@
         </div>
     </div>
 
+    <canvas id="chartDepenses"></canvas>
+
     <script>
         const ctx = document.getElementById('chartDepenses').getContext('2d');
         new Chart(ctx, {
@@ -93,30 +95,78 @@
             data: {
                 labels: ['Chantier A', 'Chantier B', 'Chantier C'],
                 datasets: [{
-                    label: 'Dépenses',
-                    data: [90000, 150000, 110000],
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                }]
+                        label: 'Montant Dépensé',
+                        data: [90000, 150000, 110000],
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        barThickness: 40 // Largeur ajustée
+                    },
+                    {
+                        label: 'Marge (Bénéfice)',
+                        data: [30000, 50000, 20000], // Facturé - Dépenses
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        barThickness: 40
+                    },
+                    {
+                        label: 'Montant Facturé',
+                        data: [120000, 200000, 130000],
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        barThickness: 40
+                    },
+                    {
+                        label: 'État d\'avancement (%)',
+                        data: [75, 80, 60],
+                        borderColor: 'rgba(255, 205, 86, 1)',
+                        borderWidth: 2,
+                        type: 'line',
+                        yAxisID: 'y-axis-percentage',
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: 'rgba(255, 205, 86, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toLocaleString() + ' XOF';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grouped: true // Assure que les barres sont côte à côte
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Montant (XOF)'
+                        }
+                    },
+                    'y-axis-percentage': {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'État d\'avancement (%)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
             }
         });
-
-        const themeToggle = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-
-        themeToggle.addEventListener('click', () => {
-            if (htmlElement.classList.contains('dark')) {
-                htmlElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                htmlElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        });
-
-        if (localStorage.getItem('theme') === 'dark') {
-            htmlElement.classList.add('dark');
-        }
     </script>
+
+
 </body>
 
 </html>
