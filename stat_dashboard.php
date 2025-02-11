@@ -25,6 +25,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.1.1/js/buttons.html5.min.js"></script>
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+
 </head>
 
 <body class="bg-white p-6 text-gray-800">
@@ -56,6 +59,14 @@
                 <p class="text-2xl font-bold"><? $tauxRentabilite ?>%</p>
             </div>
         </div>
+
+
+
+
+        <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+            <canvas id="chartDepenses"></canvas>
+        </div>
+
 
         <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4">Détails par Chantier</h2>
@@ -112,40 +123,73 @@
                 </tbody>
             </table>
         </div>
-
-
-        <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-            <canvas id="chartDepenses"></canvas>
-        </div>
     </div>
+
+    <?php
+    $depenseObj = new Depense($pdo);
+    ?>
 
     <script>
         const ctx = document.getElementById('chartDepenses').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Chantier A', 'Chantier B', 'Chantier C'],
+                labels: <?php
+                        // Utilisation de json_encode pour encoder correctement les noms des chantiers en JSON
+                        $labels = array_map(function ($chantier) {
+                            return $chantier['lib_chantier'];
+                        }, $chantiers);
+                        echo json_encode($labels);
+                        ?>,
                 datasets: [{
                         label: 'Montant Facturé',
-                        data: [120000, 200000, 130000],
+                        data: <?php
+                                // Utilisation de json_encode pour les montants facturés
+                                $factureData = array_map(function ($chantier) {
+                                    return $chantier['montant_devis'] ?? 0;
+                                }, $chantiers);
+                                echo json_encode($factureData);
+                                ?>,
                         backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        barThickness: 30 // Ajuste la largeur des barres
+                        barThickness: 30
                     },
                     {
                         label: 'Montant Dépensé',
-                        data: [90000, 150000, 110000],
+                        data: <?php
+                                // Utilisation de json_encode pour les montants dépensés
+                                $depenseData = array_map(function ($chantier) use ($depenseObj) {
+                                    return $depenseObj->getTotalDepensesParChantier($chantier['id_chantier']) ?? 0;
+                                }, $chantiers);
+                                echo json_encode($depenseData);
+                                ?>,
                         backgroundColor: 'rgba(255, 99, 132, 0.7)',
                         barThickness: 30
                     },
                     {
                         label: 'Marge (Bénéfice)',
-                        data: [30000, 50000, 20000], // Facturé - Dépenses
+                        data: <?php
+                                // Utilisation de json_encode pour les marges calculées
+                                $margeData = array_map(function ($chantier) use ($depenseObj) {
+                                    $montantFacture = $chantier['montant_devis'] ?? 0;
+                                    $montantDepense = $depenseObj->getTotalDepensesParChantier($chantier['id_chantier']) ?? 0;
+                                    return $montantFacture - $montantDepense;
+                                }, $chantiers);
+                                echo json_encode($margeData);
+                                ?>,
                         backgroundColor: 'rgba(75, 192, 192, 0.7)',
                         barThickness: 30
                     },
                     {
                         label: 'État d\'avancement (%)',
-                        data: [75, 80, 60],
+                        data: <?php
+                                // Utilisation de json_encode pour les avancements calculés
+                                $avancementData = array_map(function ($chantier) use ($depenseObj) {
+                                    $montantFacture = $chantier['montant_devis'] ?? 0;
+                                    $montantDepense = $depenseObj->getTotalDepensesParChantier($chantier['id_chantier']) ?? 0;
+                                    return ($montantFacture > 0) ? ($montantDepense / $montantFacture) * 100 : 0;
+                                }, $chantiers);
+                                echo json_encode($avancementData);
+                                ?>,
                         borderColor: 'rgba(255, 205, 86, 1)',
                         borderWidth: 2,
                         type: 'line',
@@ -169,8 +213,8 @@
                 },
                 scales: {
                     x: {
-                        stacked: false, // Les barres seront côte à côte
-                        barPercentage: 0.8 // Ajuste l'espacement entre les barres
+                        stacked: false,
+                        barPercentage: 0.8
                     },
                     y: {
                         beginAtZero: true,
@@ -204,20 +248,24 @@
                 dom: 'Bfrtip', // Permet de placer les boutons d'exportation
                 buttons: [{
                         extend: 'excelHtml5',
-                        text: 'Exporter Excel',
+                        text: '<i class="fas fa-file-excel"></i> Exporter Excel',
+                        className: 'bg-green-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300',
                         title: 'Détails par Chantier'
                     },
                     {
                         extend: 'pdfHtml5',
-                        text: 'Exporter PDF',
+                        text: '<i class="fas fa-file-pdf"></i> Exporter PDF',
+                        className: 'bg-red-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300',
                         title: 'Détails par Chantier'
                     },
                     {
                         extend: 'csvHtml5',
-                        text: 'Exporter CSV',
+                        text: '<i class="fas fa-file-csv"></i> Exporter CSV',
+                        className: 'bg-blue-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300',
                         title: 'Détails par Chantier'
                     }
                 ],
+                responsive: true, // Active la responsivité pour masquer les colonnes sur petit écran
                 language: {
                     search: "Recherche:", // Texte du champ de recherche
                     lengthMenu: "Afficher _MENU_ lignes par page",
@@ -226,11 +274,11 @@
                         previous: "Précédent",
                         next: "Suivant"
                     }
-                },
-                responsive: true // Pour rendre le tableau responsive
+                }
             });
         });
     </script>
+
 
 
 </body>
