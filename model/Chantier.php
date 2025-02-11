@@ -1,0 +1,103 @@
+<?php
+
+class Chantier
+{
+    private $pdo;
+
+    public function __construct($pdo)
+    {
+        $this->pdo = $pdo;
+    }
+
+    // Ajouter un nouveau chantier
+    public function createChantier($lib_chantier, $societe_chantier_id, $secur_ajout_chantier, $num_chantier, $cout_total_chantier)
+    {
+        $sql = "INSERT INTO chantier (lib_chantier, societe_chantier_id, date_creat_chantier, secur_ajout_chantier, date_mod_chantier, secur_mod_chantier, num_chantier, cout_total_chantier)
+                VALUES (:lib_chantier, :societe_chantier_id, NOW(), :secur_ajout_chantier, NOW(), :secur_mod_chantier, :num_chantier, :cout_total_chantier)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            ':lib_chantier' => $lib_chantier,
+            ':societe_chantier_id' => $societe_chantier_id,
+            ':secur_ajout_chantier' => $secur_ajout_chantier,
+            ':secur_mod_chantier' => $secur_ajout_chantier,
+            ':num_chantier' => $num_chantier,
+            ':cout_total_chantier' => $cout_total_chantier,
+        ]);
+    }
+
+    // Lire tous les chantiers
+    public function getAllChantiers()
+    {
+        $sql = "SELECT * FROM chantier WHERE num_chantier!='' ";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lire tous les chantiers Descandant
+    public function getAllChantiersDesc()
+    {
+        $sql = "SELECT * FROM chantier WHERE num_chantier!='' ORDER BY id_chantier DESC ";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // Lire tous les chantiers de l'entreprise selectionnée
+    public function getAllChantiersByEntreprise($entreprise)
+    {
+        $sql = "SELECT * FROM chantier WHERE entreprise = :entreprise AND num_chantier != '' ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':entreprise', $entreprise, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // Lire un chantier par ID
+    public function getChantierById($id_chantier)
+    {
+        $sql = "SELECT * FROM chantier WHERE id_chantier = :id_chantier";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':id_chantier' => $id_chantier]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Mettre à jour un chantier
+    public function updateChantier($id_chantier, $lib_chantier, $societe_chantier_id, $secur_mod_chantier, $num_chantier, $cout_total_chantier)
+    {
+        $sql = "UPDATE chantier
+                SET lib_chantier = :lib_chantier,
+                    societe_chantier_id = :societe_chantier_id,
+                    date_mod_chantier = NOW(),
+                    secur_mod_chantier = :secur_mod_chantier,
+                    num_chantier = :num_chantier,
+                    cout_total_chantier = :cout_total_chantier
+                WHERE id_chantier = :id_chantier";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            ':id_chantier' => $id_chantier,
+            ':lib_chantier' => $lib_chantier,
+            ':societe_chantier_id' => $societe_chantier_id,
+            ':secur_mod_chantier' => $secur_mod_chantier,
+            ':num_chantier' => $num_chantier,
+            ':cout_total_chantier' => $cout_total_chantier,
+        ]);
+    }
+
+    // Supprimer un chantier
+    public function deleteChantier($id_chantier)
+    {
+        $sql = "DELETE FROM chantier WHERE id_chantier = :id_chantier";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([':id_chantier' => $id_chantier]);
+    }
+
+    // Retourner la somme des montants de devis de tous les chantiers
+    public function getTotalMontantDevis()
+    {
+        $sql = "SELECT SUM(montant_devis) AS total_montant FROM chantier";
+        $stmt = $this->pdo->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total_montant'];
+    }
+}

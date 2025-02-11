@@ -1,3 +1,4 @@
+<?php include('header/header_stat_dashboard.php'); ?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -23,15 +24,19 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-blue-500 text-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl">Montant Total Facturé</h2>
-                <p class="text-2xl font-bold">450,000 XOF</p>
+                <p class="text-2xl font-bold">
+                    <?php echo number_format($totalMontantDevis, 0, ',', ' ') . ' XOF'; ?>
+                </p>
             </div>
             <div class="bg-yellow-500 text-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl">Total Dépenses</h2>
-                <p class="text-2xl font-bold">350,000 XOF</p>
+                <p class="text-2xl font-bold">
+                    <?php echo number_format($totalDepenses, 0, ',', ' ') . ' XOF'; ?>
+                </p>
             </div>
             <div class="bg-green-500 text-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl">Taux de Rentabilité</h2>
-                <p class="text-2xl font-bold">78%</p>
+                <p class="text-2xl font-bold"><? $tauxRentabilite ?>%</p>
             </div>
         </div>
 
@@ -40,6 +45,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr>
+                        <th class="p-2 border-b">#</th>
                         <th class="p-2 border-b">Chantier</th>
                         <th class="p-2 border-b">Montant Facturé</th>
                         <th class="p-2 border-b">Montant Dépensé</th>
@@ -47,36 +53,45 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td class="p-2 border-b">Chantier A</td>
-                        <td class="p-2 border-b">120,000 XOF</td>
-                        <td class="p-2 border-b">90,000 XOF</td>
-                        <td class="p-2 border-b">
-                            <div class="w-full bg-gray-300 rounded-full h-4">
-                                <div class="bg-blue-500 h-4 rounded-full" style="width: 75%;"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="p-2 border-b">Chantier B</td>
-                        <td class="p-2 border-b">200,000 XOF</td>
-                        <td class="p-2 border-b">150,000 XOF</td>
-                        <td class="p-2 border-b">
-                            <div class="w-full bg-gray-300 rounded-full h-4">
-                                <div class="bg-green-500 h-4 rounded-full" style="width: 80%;"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="p-2 border-b">Chantier C</td>
-                        <td class="p-2 border-b">130,000 XOF</td>
-                        <td class="p-2 border-b">110,000 XOF</td>
-                        <td class="p-2 border-b">
-                            <div class="w-full bg-gray-300 rounded-full h-4">
-                                <div class="bg-red-500 h-4 rounded-full" style="width: 60%;"></div>
-                            </div>
-                        </td>
-                    </tr>
+                    <?php
+                    foreach ($chantiers as $chantier) {
+                        $chantierId = $chantier['id_chantier'];
+                        $montantFacture = $chantier['montant_devis'] ?? 0; // Si null, utiliser 0
+                        $montantDepense = (new Depense($pdo))->getTotalDepensesParChantier($chantier['id_chantier']) ?? 0; // Si null, utiliser 0
+
+                        // Calculer l'état d'avancement (pourcentage)
+                        $avancement = 0;
+                        if ($montantFacture > 0) {
+                            $avancement = ($montantFacture > 0) ? ($montantDepense / $montantFacture) * 100 : 0;
+                        }
+
+                        // Déterminer la couleur en fonction de l'avancement
+                        $avancementClass = 'bg-gray-300'; // par défaut
+                        if ($avancement >= 80) {
+                            $avancementClass = 'bg-green-500';
+                        } elseif ($avancement >= 50) {
+                            $avancementClass = 'bg-blue-500';
+                        } elseif ($avancement >= 30) {
+                            $avancementClass = 'bg-yellow-500';
+                        } else {
+                            $avancementClass = 'bg-red-500';
+                        }
+
+                        // Affichage dans le tableau
+                        echo "
+                        <tr>
+                            <td class='p-2 border-b'>{$chantier['num_chantier']}</td>
+                            <td class='p-2 border-b'>{$chantier['lib_chantier']}</td>
+                            <td class='p-2 border-b'>" . number_format($montantFacture, 0, ',', ' ') . " XOF</td>
+                            <td class='p-2 border-b'>" . number_format($montantDepense, 0, ',', ' ') . " XOF</td>
+                            <td class='p-2 border-b'>
+                                <div class='w-full bg-gray-300 rounded-full h-4'>
+                                    <div class='{$avancementClass} h-4 rounded-full' style='width: {$avancement}%;'></div>
+                                </div>
+                            </td>
+                        </tr>";
+                    }
+                    ?>
                 </tbody>
             </table>
         </div>
