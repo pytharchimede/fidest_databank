@@ -8,6 +8,23 @@
     <title>Statistiques - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <!-- Inclure Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Inclure DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- Inclure DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.1.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.1.1/js/buttons.html5.min.js"></script>
+
 </head>
 
 <body class="bg-white p-6 text-gray-800">
@@ -42,7 +59,7 @@
 
         <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4">Détails par Chantier</h2>
-            <table class="w-full text-left border-collapse">
+            <table id="chantierTable" class="w-full text-left border-collapse">
                 <thead>
                     <tr>
                         <th class="p-2 border-b">#</th>
@@ -79,22 +96,23 @@
 
                         // Affichage dans le tableau
                         echo "
-                        <tr>
-                            <td class='p-2 border-b'>{$chantier['num_chantier']}</td>
-                            <td class='p-2 border-b'>{$chantier['lib_chantier']}</td>
-                            <td class='p-2 border-b'>" . number_format($montantFacture, 0, ',', ' ') . " XOF</td>
-                            <td class='p-2 border-b'>" . number_format($montantDepense, 0, ',', ' ') . " XOF</td>
-                            <td class='p-2 border-b'>
-                                <div class='w-full bg-gray-300 rounded-full h-4'>
-                                    <div class='{$avancementClass} h-4 rounded-full' style='width: {$avancement}%;'></div>
-                                </div>
-                            </td>
-                        </tr>";
+                <tr>
+                    <td class='p-2 border-b'>{$chantier['num_chantier']}</td>
+                    <td class='p-2 border-b'>{$chantier['lib_chantier']}</td>
+                    <td class='p-2 border-b'>" . number_format($montantFacture, 0, ',', ' ') . " XOF</td>
+                    <td class='p-2 border-b'>" . number_format($montantDepense, 0, ',', ' ') . " XOF</td>
+                    <td class='p-2 border-b'>
+                        <div class='w-full bg-gray-300 rounded-full h-4'>
+                            <div class='{$avancementClass} h-4 rounded-full' style='width: {$avancement}%;'></div>
+                        </div>
+                    </td>
+                </tr>";
                     }
                     ?>
                 </tbody>
             </table>
         </div>
+
 
         <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
             <canvas id="chartDepenses"></canvas>
@@ -179,6 +197,41 @@
             }
         });
     </script>
+
+    <script>
+        $(document).ready(function() {
+            $('#chantierTable').DataTable({
+                dom: 'Bfrtip', // Permet de placer les boutons d'exportation
+                buttons: [{
+                        extend: 'excelHtml5',
+                        text: 'Exporter Excel',
+                        title: 'Détails par Chantier'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: 'Exporter PDF',
+                        title: 'Détails par Chantier'
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exporter CSV',
+                        title: 'Détails par Chantier'
+                    }
+                ],
+                language: {
+                    search: "Recherche:", // Texte du champ de recherche
+                    lengthMenu: "Afficher _MENU_ lignes par page",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
+                    paginate: {
+                        previous: "Précédent",
+                        next: "Suivant"
+                    }
+                },
+                responsive: true // Pour rendre le tableau responsive
+            });
+        });
+    </script>
+
 
 </body>
 
